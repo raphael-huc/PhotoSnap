@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
+import helloandroid.ut3.battlewhat.R;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
