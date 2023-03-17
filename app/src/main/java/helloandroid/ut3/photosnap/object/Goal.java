@@ -6,7 +6,6 @@ import android.widget.ImageView;
 
 public class Goal extends ObjectImageView {
 
-
     public Goal(ImageView goalView) {
         super(goalView);
     }

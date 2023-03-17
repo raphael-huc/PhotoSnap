@@ -24,7 +24,6 @@ public class CameraActivity extends AppCompatActivity {
     private Context context;
     private Bitmap generatedImage;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,9 +97,6 @@ public class CameraActivity extends AppCompatActivity {
         getRedGranterThanGreenPixel();
     }
 
-
-    private final int PIXEL_RED_LIMIT_DETECTION = 180;
-
     // Create a Runnable that generates the Bitmap pixel by pixel
     Runnable generateBitmapRunnable = new Runnable() {
         @Override
@@ -139,6 +135,7 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
+    // Simple generator, less precise
     private void generateImageBaseOnRedBase() {
 
         final int height = photo.getHeight();
@@ -154,14 +151,10 @@ public class CameraActivity extends AppCompatActivity {
                 int green = Color.green(pixel);
                 int blue = Color.blue(pixel);
 
-                System.out.println("red: " + red + ", green: " + green + ", blue: " + blue);
-
                 if (blue < red && green < red && red >= 80) {
                     generatedImage.setPixel(x, y, Color.argb(255, 255, 0, 0));
-                    System.out.println("RED !");
                 } else {
                     generatedImage.setPixel(x, y, pixel);
-                    System.out.println("Not RED !");
                 }
             }
         }
