@@ -5,9 +5,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -19,11 +21,14 @@ public class CameraActivity extends AppCompatActivity {
     private ImageView imageView;
     private Bitmap photo;
     private static final int MY_CAMERA_PERMISSION_CODE = 100;
+    private Context context;
+    private Bitmap generatedImage;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        context = this;
         setContentView(R.layout.activity_camera);
         imageView = findViewById(R.id.cameraView);
     }
@@ -68,9 +73,94 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
-    public void onClickStartGame(View v) {
-        Intent intent = new Intent(this, GameActivity.class);
-        intent.putExtra("bitmap", photo);
-        startActivity(intent);
+    public void getRedGranterThanGreenPixel() {
+        // Wait for the thread to finish
+        Thread thread = new Thread(generateBitmapRunnable);
+        thread.start();
+        try {
+            System.out.println("------ Thread start ------");
+            thread.join();
+            System.out.println("------ Thread finish ------");
+            Intent intent = new Intent(context, GameActivity.class);
+            intent.putExtra("bitmap", generatedImage);
+            intent.putExtra("generatedColisionImage", generatedImage);
+            startActivity(intent);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
+
+    public void onClickStartGame(View v) {
+        getRedGranterThanGreenPixel();
+    }
+
+
+    private final int PIXEL_RED_LIMIT_DETECTION = 180;
+
+    // Create a Runnable that generates the Bitmap pixel by pixel
+    Runnable generateBitmapRunnable = new Runnable() {
+        @Override
+        public void run() {
+            generateImageBaseOnRed();
+        }
+    };
+
+    private void generateImageBaseOnRed() {
+
+        final int height = photo.getHeight();
+        final int width = photo.getWidth();
+        generatedImage = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int pixel = photo.getPixel(x, y);
+
+                int red = Color.red(pixel);
+                int green = Color.green(pixel);
+                int blue = Color.blue(pixel);
+
+                if (red >= 200  && blue < 180 && green < 180) {
+                    generatedImage.setPixel(x, y, Color.argb(255, 255, 0, 0));
+                } else
+                if (red >= 125 && blue < 100 && green < 100) {
+                    generatedImage.setPixel(x, y, Color.argb(255, 255, 0, 0));
+                } else
+                if (red >= 80 && blue < 60 && green < 60) {
+                    generatedImage.setPixel(x, y, Color.argb(255, 255, 0, 0));
+                } else {
+                    generatedImage.setPixel(x, y, pixel);
+                }
+            }
+        }
+    }
+
+    private void generateImageBaseOnRedBase() {
+
+        final int height = photo.getHeight();
+        final int width = photo.getWidth();
+        generatedImage = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int pixel = photo.getPixel(x, y);
+
+                int red = Color.red(pixel);
+                int green = Color.green(pixel);
+                int blue = Color.blue(pixel);
+
+                System.out.println("red: " + red + ", green: " + green + ", blue: " + blue);
+
+                if (blue < red && green < red && red >= 80) {
+                    generatedImage.setPixel(x, y, Color.argb(255, 255, 0, 0));
+                    System.out.println("RED !");
+                } else {
+                    generatedImage.setPixel(x, y, pixel);
+                    System.out.println("Not RED !");
+                }
+            }
+        }
+    }
+
 }
