@@ -3,7 +3,9 @@ package helloandroid.ut3.photosnap;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -11,6 +13,8 @@ import android.os.Handler;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import helloandroid.ut3.photosnap.object.Ball;
+import helloandroid.ut3.photosnap.object.Goal;
 import helloandroid.ut3.photosnap.sensors.AcceleroMeterSensor;
 import helloandroid.ut3.photosnap.sensors.LightSensor;
 import helloandroid.ut3.photosnap.sensors.OnLightChangeListener;
@@ -20,7 +24,8 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
 
     private LightSensor lightSensor;
     private AcceleroMeterSensor acceleroMeterSensor;
-    private ImageView balle;
+    private Ball balle;
+    private Goal goal;
 
     public Bitmap bitmap;
     private ConstraintLayout gameView;
@@ -52,7 +57,8 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
         //set background of game interface
         gameView.setBackground(gameBackground);
         //add balle in game interface
-        balle = findViewById(R.id.balle);
+        balle = new Ball(findViewById(R.id.balle));
+        goal = new Goal(findViewById(R.id.cage_foot));
 
         ballePositionY = 0;
         ballePositionX = 0;
@@ -86,6 +92,8 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
         bHandler.removeCallbacks(mUpdateBallePositionTime);
     }
 
+
+
     public void updateBallePosition(int x, int y) {
         int direction = 0;
         //go up
@@ -108,25 +116,25 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
         switch(direction){
             case 1:
                 ballePositionY += vitesse;
-                balle.setY((float) ballePositionY);
+                balle.setPositionX((float) ballePositionY);
                 //balle.setPositionY(ballePositionY);
                 System.out.println("go up");
                 break;
             case 2:
                 ballePositionY -= vitesse;
-                balle.setY((float) ballePositionY);
+                balle.setPositionY((float) ballePositionY);
                 //balle.setPositionY(ballePositionY);
                 System.out.println("go down");
                 break;
             case 3:
                 ballePositionX += vitesse;
-                balle.setX((float) ballePositionY);
+                balle.setPositionX((float) ballePositionY);
                 //balle.setPositionX(ballePositionX);
                 System.out.println("go right (droite)");
                 break;
             case 4:
                 ballePositionX -= vitesse;
-                balle.setX((float) ballePositionY);
+                balle.setPositionX((float) ballePositionY);
                 //balle.setPositionX(ballePositionX);
                 System.out.println("go left (gauche)");
                 break;
@@ -141,15 +149,12 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
         ImageView v= findViewById(R.id.balle);
         if(lightLevel==0){
             v.setImageResource(R.drawable.balledark);
-
         }
         if(lightLevel==1){
             v.setImageResource(R.drawable.balle);
-
         }
         if(lightLevel==2){
             v.setImageResource(R.drawable.balledark);
-
         }
 
 
@@ -159,6 +164,11 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
     public void onMouvementChange(int x, int y) {
         //here Jossy
         Toast.makeText(getApplicationContext(),"x :"+x+" y:"+y,Toast.LENGTH_SHORT).show();
+        if(checkIfBallInGoal()) {
+            Toast.makeText(getApplicationContext(),"Bien ouej !",Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
+            startActivity(intent);
+        }
     }
 
     @Override
@@ -196,6 +206,12 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
             lightSensor.onResume();
         }
 
+    }
+
+    private boolean checkIfBallInGoal() {
+        System.out.println("----- HERE -----");
+        return Rect.intersects(balle.getCollisionShape(),
+                goal.getCollisionShape());
     }
 
     @Override
