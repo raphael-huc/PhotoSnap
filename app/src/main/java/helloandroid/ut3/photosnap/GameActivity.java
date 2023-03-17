@@ -3,7 +3,9 @@ package helloandroid.ut3.photosnap;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -16,6 +18,8 @@ import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import helloandroid.ut3.photosnap.object.Ball;
+import helloandroid.ut3.photosnap.object.Goal;
 import helloandroid.ut3.photosnap.sensors.AcceleroMeterSensor;
 import helloandroid.ut3.photosnap.sensors.LightSensor;
 import helloandroid.ut3.photosnap.sensors.OnLightChangeListener;
@@ -25,7 +29,8 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
 
     private LightSensor lightSensor;
     private AcceleroMeterSensor acceleroMeterSensor;
-    private ImageView balle;
+    private Ball balle;
+    private Goal goal;
 
     public Bitmap bitmap;
     public ConstraintLayout gameView;
@@ -62,7 +67,8 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
         //set background of game interface
         gameView.setBackground(gameBackground);
         //add balle in game interface
-        balle = findViewById(R.id.balle);
+        balle = new Ball(findViewById(R.id.balle));
+        goal = new Goal(findViewById(R.id.cage_foot));
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -107,6 +113,8 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
     private void stopUpdatePlayerPositionTime() {
         bHandler.removeCallbacks(mUpdateBallePositionTime);
     }
+
+
 
     public void updateBallePosition(int x, int y) {
         int direction = 0;
@@ -195,15 +203,12 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
         ImageView v= findViewById(R.id.balle);
         if(lightLevel==0){
             v.setImageResource(R.drawable.balledark);
-
         }
         if(lightLevel==1){
             v.setImageResource(R.drawable.balle);
-
         }
         if(lightLevel==2){
             v.setImageResource(R.drawable.balledark);
-
         }
 
 
@@ -252,6 +257,12 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
             lightSensor.onResume();
         }
 
+    }
+
+    private boolean checkIfBallInGoal() {
+        System.out.println("----- HERE -----");
+        return Rect.intersects(balle.getCollisionShape(),
+                goal.getCollisionShape());
     }
 
     @Override
