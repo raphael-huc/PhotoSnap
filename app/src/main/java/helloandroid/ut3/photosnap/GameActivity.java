@@ -10,6 +10,11 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
+import android.util.DisplayMetrics;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -20,7 +25,7 @@ import helloandroid.ut3.photosnap.sensors.LightSensor;
 import helloandroid.ut3.photosnap.sensors.OnLightChangeListener;
 import helloandroid.ut3.photosnap.sensors.OnMouvementListener;
 
-public class GameActivity extends AppCompatActivity implements OnLightChangeListener, OnMouvementListener {
+public class GameActivity extends AppCompatActivity implements OnLightChangeListener, OnMouvementListener, View.OnTouchListener {
 
     private LightSensor lightSensor;
     private AcceleroMeterSensor acceleroMeterSensor;
@@ -28,7 +33,7 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
     private Goal goal;
 
     public Bitmap bitmap;
-    private ConstraintLayout gameView;
+    public ConstraintLayout gameView;
     private Drawable gameBackground;
     private int vitesse = 4;
     private int ballePositionY;
@@ -37,15 +42,19 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
     private int abscisse;
     private Handler bHandler;
 
+    private float lastX;
+    private float lastY;
+    private float deltaX;
+    private float deltaY;
+    private long startTimeSwipe;
+    private static final int SWIPE_THRESHOLD = 100;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //get picture
         bitmap = getIntent().getParcelableExtra("bitmap");
 
-        System.out.println("----------- bitmap -------------");
-        System.out.println(bitmap);
-        System.out.println("----------- bitmap -------------");
         lightSensor = new LightSensor(this, this);
         acceleroMeterSensor = new AcceleroMeterSensor(this,this);
 
@@ -54,20 +63,32 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
         gameBackground = new BitmapDrawable(getResources(), bitmap);
         // create game interface
         gameView = findViewById(R.id.Game);
+
         //set background of game interface
         gameView.setBackground(gameBackground);
         //add balle in game interface
         balle = new Ball(findViewById(R.id.balle));
         goal = new Goal(findViewById(R.id.cage_foot));
 
-        ballePositionY = 0;
-        ballePositionX = 0;
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        int screenWidth = metrics.widthPixels;
+        int screenHeight = metrics.heightPixels;
+
+        //balle.setX(((float) screenWidth)/2);
+        //balle.setY(((float) screenHeight)/2);
+
+        ballePositionX = screenWidth/2;
+        ballePositionY = screenHeight/2;
+        //System.out.println("***********X: "+ballePositionX+" ballePositionY: "+ballePositionY);
+        bHandler = new Handler();
+        gameView.setOnTouchListener(this);
     }
 
     /**
      * un Runnable qui sera appelé par le timer pour la gestion du mouvement du player
      */
-    private final Runnable mUpdateBallePositionTime = new Runnable() {
+    private Runnable mUpdateBallePositionTime = new Runnable() {
         public void run() {
             // mettre à jour la position du joueur
             bHandler.postDelayed(this, 20);
@@ -79,6 +100,7 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
     private void startUpdateBallePositionTimeWithDuration(int x, int y, long duration) {
         abscisse = x; // modifier la valeur de ballePositionX
         ordonnee = y; // modifier la valeur de ballePositionY
+        //System.out.println("startUpdateBallePositionTimeWithDuration***********X: "+ballePositionX+" ballePositionY: "+ballePositionY);
         bHandler.post(mUpdateBallePositionTime);
         bHandler.postDelayed(() -> {
             abscisse = x; // modifier la valeur de ballePositionX
@@ -97,50 +119,82 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
     public void updateBallePosition(int x, int y) {
         int direction = 0;
         //go up
-        if (y>0){
+        if (y<0 && Math.abs(y) > Math.abs(x)){
             direction = 1;
         }
         //go down
-        if (y<0){
+        if (y>0 && Math.abs(y) > Math.abs(x)){
             direction = 2;
         }
         //go right (droite)
-        if (x>0){
+        if (x>0 && Math.abs(x) > Math.abs(y)){
             direction = 3;
         }
         //go left (gauche)
-        if (x<0){
+        if (x<0 && Math.abs(x) > Math.abs(y)){
             direction = 4;
         }
 
         switch(direction){
             case 1:
-                ballePositionY += vitesse;
-                balle.setPositionX((float) ballePositionY);
-                //balle.setPositionY(ballePositionY);
-                System.out.println("go up");
+                ballePositionY -= vitesse;
+                balle.setY((float) ballePositionY);
+                //System.out.println("***********go up");
                 break;
             case 2:
-                ballePositionY -= vitesse;
-                balle.setPositionY((float) ballePositionY);
-                //balle.setPositionY(ballePositionY);
-                System.out.println("go down");
+                ballePositionY += vitesse;
+                balle.setY((float) ballePositionY);
+                //System.out.println("***********go down");
                 break;
             case 3:
                 ballePositionX += vitesse;
-                balle.setPositionX((float) ballePositionY);
-                //balle.setPositionX(ballePositionX);
-                System.out.println("go right (droite)");
+                balle.setX((float) ballePositionX);
+                //System.out.println("************go right (droite)");
                 break;
             case 4:
                 ballePositionX -= vitesse;
-                balle.setPositionX((float) ballePositionY);
-                //balle.setPositionX(ballePositionX);
-                System.out.println("go left (gauche)");
+                balle.setX((float) ballePositionX);
+                //System.out.println("*********go left (gauche)");
                 break;
             default:
-                System.out.println("immobile");
+                System.out.println("*********immobile");
                 break;
+        }
+    }
+
+
+    /**
+     * When we touche screen, move balle
+     */
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        switch(event.getAction()) {
+            case (MotionEvent.ACTION_DOWN) :
+                // Enregistre la position de départ du toucher
+                lastY = event.getY();
+                lastX = event.getX();
+                // Enregistre le temps de départ
+                startTimeSwipe = SystemClock.elapsedRealtime();
+                v.setTag(startTimeSwipe); // Stocke la valeur de startTime dans la propriété tag de la vue
+                return true;
+            case (MotionEvent.ACTION_MOVE) :
+                // Calcule la distance parcourue depuis le toucher initial
+                deltaY = event.getY() - lastY;
+                deltaX = event.getX() - lastX;
+                return true;
+            case (MotionEvent.ACTION_UP) :
+                long startTime = (Long) v.getTag(); // Récupère la valeur de startTime à partir de la propriété tag de la vue
+                long elapsedTime = SystemClock.elapsedRealtime() - startTime; // Calcule le temps écoulé
+                if(elapsedTime > 100L){
+                    startUpdateBallePositionTimeWithDuration((int) deltaX, (int) deltaY, elapsedTime);
+                }
+                return true;
+            case (MotionEvent.ACTION_CANCEL) :
+                return true;
+            case (MotionEvent.ACTION_OUTSIDE) :
+                return true;
+            default :
+                return super.onTouchEvent(event);
         }
     }
 
@@ -163,12 +217,9 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
     @Override
     public void onMouvementChange(int x, int y) {
         //here Jossy
+
         Toast.makeText(getApplicationContext(),"x :"+x+" y:"+y,Toast.LENGTH_SHORT).show();
-        if(checkIfBallInGoal()) {
-            Toast.makeText(getApplicationContext(),"Bien ouej !",Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
-            startActivity(intent);
-        }
+        //startUpdateBallePositionTimeWithDuration(x, y, 500L);
     }
 
     @Override
