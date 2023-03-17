@@ -75,18 +75,22 @@ public class CameraActivity extends AppCompatActivity {
 
     public void getRedGranterThanGreenPixel() {
         // Wait for the thread to finish
-        Thread thread = new Thread(generateBitmapRunnable);
-        thread.start();
-        try {
-            System.out.println("------ Thread start ------");
-            thread.join();
-            System.out.println("------ Thread finish ------");
-            Intent intent = new Intent(context, GameActivity.class);
-            intent.putExtra("bitmap", generatedImage);
-            intent.putExtra("generatedColisionImage", generatedImage);
-            startActivity(intent);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if(photo != null) {
+            Thread thread = new Thread(generateBitmapRunnable);
+            thread.start();
+            try {
+                System.out.println("------ Thread start ------");
+                thread.join();
+                System.out.println("------ Thread finish ------");
+                Intent intent = new Intent(context, GameActivity.class);
+                intent.putExtra("bitmap", generatedImage);
+                intent.putExtra("generatedColisionImage", generatedImage);
+                startActivity(intent);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(this, "Take a picture first !",Toast.LENGTH_SHORT).show();
         }
     }
 
