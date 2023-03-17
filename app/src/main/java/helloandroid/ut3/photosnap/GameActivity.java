@@ -160,6 +160,11 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
                 System.out.println("*********immobile");
                 break;
         }
+        if(checkIfBallInGoal()){
+            Toast.makeText(getApplicationContext(),"Félicitation, vous avez terminé le Jeu PhotoSnap! ",Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+        }
     }
 
 
@@ -218,7 +223,7 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
     public void onMouvementChange(int x, int y) {
         //here Jossy
 
-        Toast.makeText(getApplicationContext(),"x :"+x+" y:"+y,Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(),"x :"+x+" y:"+y,Toast.LENGTH_SHORT).show();
         //startUpdateBallePositionTimeWithDuration(x, y, 500L);
     }
 
