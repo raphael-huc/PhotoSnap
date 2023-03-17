@@ -138,22 +138,22 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
         switch(direction){
             case 1:
                 ballePositionY -= vitesse;
-                balle.setY((float) ballePositionY);
+                balle.setPositionY(ballePositionY);
                 //System.out.println("***********go up");
                 break;
             case 2:
                 ballePositionY += vitesse;
-                balle.setY((float) ballePositionY);
+                balle.setPositionY((float) ballePositionY);
                 //System.out.println("***********go down");
                 break;
             case 3:
                 ballePositionX += vitesse;
-                balle.setX((float) ballePositionX);
+                balle.setPositionX((float) ballePositionX);
                 //System.out.println("************go right (droite)");
                 break;
             case 4:
                 ballePositionX -= vitesse;
-                balle.setX((float) ballePositionX);
+                balle.setPositionX((float) ballePositionX);
                 //System.out.println("*********go left (gauche)");
                 break;
             default:
