@@ -11,8 +11,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import helloandroid.ut3.battlewhat.R;
-
 public class CameraActivity extends AppCompatActivity {
 
     private static final int CAMERA_REQUEST = 1888;
