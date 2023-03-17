@@ -50,22 +50,25 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
 
     @Override
     public void onLightChange(int lightLevel) {
-        String message ="";
+        ImageView v= findViewById(R.id.balle);
         if(lightLevel==0){
-            message="Low illumination => ball color change";
+            v.setImageResource(R.drawable.balledark);
+
         }
         if(lightLevel==1){
-            message="Normal illumination => ball color change";
+            v.setImageResource(R.drawable.balle);
+
         }
         if(lightLevel==2){
-            message="Great illumination => ball color change";
+            v.setImageResource(R.drawable.balledark);
+
         }
-        Toast.makeText(this.getApplicationContext(),message,
-                Toast.LENGTH_SHORT).show();
+
+
     }
 
     @Override
-    public void onMouvementChange(float x, float y) {
+    public void onMouvementChange(int x, int y) {
         //here Jossy
         Toast.makeText(getApplicationContext(),"x :"+x+" y:"+y,Toast.LENGTH_SHORT).show();
     }

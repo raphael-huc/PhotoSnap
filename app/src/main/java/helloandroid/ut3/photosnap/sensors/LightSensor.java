@@ -22,7 +22,6 @@ public class LightSensor implements SensorEventListener {
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         lightLevel = 1;
         this.lightListener = lightListener;
-        this.lightListener.onLightChange(lightLevel);
     }
 
     @Override

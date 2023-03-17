@@ -1,7 +1,7 @@
 package helloandroid.ut3.photosnap.sensors;
 
 public interface OnMouvementListener {
-    public void onMouvementChange(float x,float y);
+    public void onMouvementChange(int x,int y);
 }
 /* To use the shake listener:
     1- acceleroMeterSensor = new AcceleroMeterSensor(this,this);
