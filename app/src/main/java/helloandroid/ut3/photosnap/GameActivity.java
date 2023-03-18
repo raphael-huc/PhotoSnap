@@ -5,16 +5,18 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.SystemClock;
 import android.util.DisplayMetrics;
+import android.view.ViewTreeObserver;
+import android.os.SystemClock;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -35,12 +37,14 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
     public Bitmap bitmap;
     public ConstraintLayout gameView;
     private Drawable gameBackground;
-    private int vitesse = 4;
+    private int vitesse = 6;
     private int ballePositionY;
     private int ballePositionX;
     private int ordonnee;
     private int abscisse;
     private Handler bHandler;
+    private int widthScreen;
+    private int heightScreen;
 
     private float lastX;
     private float lastY;
@@ -83,6 +87,17 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
         //System.out.println("***********X: "+ballePositionX+" ballePositionY: "+ballePositionY);
         bHandler = new Handler();
         gameView.setOnTouchListener(this);
+
+        ConstraintLayout layout = (ConstraintLayout)findViewById(R.id.gameConstraint);
+        ViewTreeObserver vto = layout.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                layout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                widthScreen = layout.getMeasuredWidth();
+                heightScreen = layout.getMeasuredHeight();
+            }
+        });
     }
 
     /**
@@ -91,7 +106,7 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
     private Runnable mUpdateBallePositionTime = new Runnable() {
         public void run() {
             // mettre à jour la position du joueur
-            bHandler.postDelayed(this, 20);
+            bHandler.postDelayed(this, 50);
             updateBallePosition(abscisse, ordonnee);
         }
     };
@@ -137,23 +152,35 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
 
         switch(direction){
             case 1:
-                ballePositionY -= vitesse;
-                balle.setPositionY(ballePositionY);
+                int ballePositionYUpNext = ballePositionY -= vitesse;
+                if (checkIfItCanMoveUpToTheNextPosition(ballePositionX, ballePositionYUpNext, 1)) {
+                    ballePositionY -= vitesse;
+                    balle.setPositionY((float) ballePositionY);
+                }
                 //System.out.println("***********go up");
                 break;
             case 2:
-                ballePositionY += vitesse;
-                balle.setPositionY((float) ballePositionY);
+                int ballePositionYDownNext = ballePositionY += vitesse;
+                if (checkIfItCanMoveUpToTheNextPosition(ballePositionX, ballePositionYDownNext, 2)) {
+                    ballePositionY += vitesse;
+                    balle.setPositionY((float) ballePositionY);
+                }
                 //System.out.println("***********go down");
                 break;
             case 3:
-                ballePositionX += vitesse;
-                balle.setPositionX((float) ballePositionX);
+                int ballePositionXRightNext = ballePositionX += vitesse;
+                if (checkIfItCanMoveUpToTheNextPosition(ballePositionXRightNext, ballePositionY, 3)) {
+                    ballePositionX += vitesse;
+                    balle.setPositionX((float) ballePositionX);
+                }
                 //System.out.println("************go right (droite)");
                 break;
             case 4:
-                ballePositionX -= vitesse;
-                balle.setPositionX((float) ballePositionX);
+                int ballePositionXLeftNext = ballePositionX -= vitesse;
+                if (checkIfItCanMoveUpToTheNextPosition(ballePositionXLeftNext, ballePositionY, 3)) {
+                    ballePositionX += vitesse;
+                    balle.setPositionX((float) ballePositionX);
+                }
                 //System.out.println("*********go left (gauche)");
                 break;
             default:
@@ -165,6 +192,69 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
         }
+    }
+
+
+    private boolean checkIfItCanMoveUpToTheNextPosition(int x, int y, int direction) {
+        Rect rect = balle.getCollisionShapInPosition(x, y);
+        Point topLeft = new Point(rect.left, rect.top); // top-left point
+        Point topRight = new Point(rect.right, rect.top); // top-right point
+        Point bottomLeft = new Point(rect.left, rect.bottom); // bottom-left point
+        Point bottomRight = new Point(rect.right, rect.bottom); // bottom-right point
+        boolean canMove = true;
+        switch(direction) {
+            case 1:
+                for (int rx = topLeft.x; rx <= topRight.x; rx++) {
+                    int posX = getPositionForAnotherSize(rx, widthScreen , bitmap.getWidth());
+                    int posY = getPositionForAnotherSize(topLeft.y, heightScreen , bitmap.getHeight());
+                    int pixel = bitmap.getPixel(posX, posY);
+                    int red = Color.red(pixel);
+
+                    if(red == 255) {
+                        canMove = false;
+                    }
+                }
+                break;
+            case 2:
+                for (int rx = bottomLeft.x; rx <= bottomRight.x; rx++) {
+                    int posX = getPositionForAnotherSize(rx, widthScreen , bitmap.getWidth());
+                    int posY = getPositionForAnotherSize(bottomLeft.y, heightScreen , bitmap.getHeight());
+                    int pixel = bitmap.getPixel(posX, posY);
+                    int red = Color.red(pixel);
+                    if(red == 255) {
+                        canMove = false;
+                    }
+                }
+                break;
+            case 3:
+                for (int ry = topRight.y; ry <= bottomRight.y; ry++) {
+                    int posX = getPositionForAnotherSize(topRight.x, widthScreen , bitmap.getWidth());
+                    int posY = getPositionForAnotherSize(ry, heightScreen , bitmap.getHeight());
+                    int pixel = bitmap.getPixel(posX, posY);
+                    int red = Color.red(pixel);
+                    if(red == 255) {
+                        canMove = false;
+                    }
+                }
+                break;
+            case 4:
+                for (int ry = topLeft.y; ry <= bottomLeft.y; ry++) {
+                    int posX = getPositionForAnotherSize(topRight.x, widthScreen , bitmap.getWidth());
+                    int posY = getPositionForAnotherSize(ry, heightScreen , bitmap.getHeight());
+                    int pixel = bitmap.getPixel(posX, posY);
+                    int red = Color.red(pixel);
+                    if(red == 255) {
+                        canMove = false;
+                    }
+                }
+                break;
+        }
+
+        return canMove;
+    }
+
+    public int getPositionForAnotherSize(int value, int initialSize, int finalSize) {
+        return (int) value * finalSize / initialSize;
     }
 
 
@@ -265,7 +355,6 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
     }
 
     private boolean checkIfBallInGoal() {
-        System.out.println("----- HERE -----");
         return Rect.intersects(balle.getCollisionShape(),
                 goal.getCollisionShape());
     }
@@ -280,5 +369,4 @@ public class GameActivity extends AppCompatActivity implements OnLightChangeList
             lightSensor.onPause();
         }
     }
-
 }
